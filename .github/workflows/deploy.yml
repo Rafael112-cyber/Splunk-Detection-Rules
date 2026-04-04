@@ -17,13 +17,18 @@ jobs:
             rule_name=$(basename "$file" .conf)
             search_query=$(cat "$file")
             
-            curl -k -u admin:${{ secrets.SPLUNK_TOKEN }} \
-                 https://${{ secrets.SPLUNK_HOST }}:8089/servicesNS/admin/search/saved/searches \
+            echo "Deploying rule: $rule_name via API..."
+            
+            curl -k -X POST https://${{ secrets.SPLUNK_HOST }}:8089/servicesNS/admin/search/saved/searches \
+                 -H "Authorization: Splunk ${{ secrets.SPLUNK_TOKEN }}" \
                  -d name="$rule_name" \
                  -d search="$search_query" \
                  -d alert_type="number of events" \
                  -d alert_comparator="greater than" \
                  -d alert_threshold="0" \
-                 -d actions="webhook" \
-                 -d is_visible=1
+                 -d "action.webhook.enable=1" \
+                 -d "is_scheduled=1" \
+                 -d "cron_schedule=*/1 * * * *" \
+                 -d "is_visible=1" \
+                 -d "output_mode=json"
           done

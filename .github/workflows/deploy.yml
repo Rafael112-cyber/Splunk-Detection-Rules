@@ -19,8 +19,9 @@ jobs:
             
             echo "Deploying rule: $rule_name via API..."
             
-            curl -k -X POST https://${{ secrets.SPLUNK_HOST }}:8089/servicesNS/admin/search/saved/searches \
-                 -H "Authorization: Splunk ${{ secrets.SPLUNK_TOKEN }}" \
+            curl -k -X POST "https://${{ secrets.SPLUNK_HOST }}:8089/services/saved/searches" \
+                 -H "Authorization: Bearer ${{ secrets.SPLUNK_TOKEN }}" \
+                 -H "Content-Type: application/x-www-form-urlencoded" \
                  -d name="$rule_name" \
                  -d search="$search_query" \
                  -d alert_type="number of events" \

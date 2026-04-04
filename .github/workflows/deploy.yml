@@ -1,0 +1,29 @@
+name: Splunk Rule Deployer
+on:
+  push:
+    paths:
+      - 'rules/**'
+
+jobs:
+  deploy_to_splunk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: API Call to Splunk
+        run: |
+          for file in rules/*.conf; do
+            rule_name=$(basename "$file" .conf)
+            search_query=$(cat "$file")
+            
+            curl -k -u admin:${{ secrets.SPLUNK_TOKEN }} \
+                 https://${{ secrets.SPLUNK_HOST }}:8089/servicesNS/admin/search/saved/searches \
+                 -d name="$rule_name" \
+                 -d search="$search_query" \
+                 -d alert_type="number of events" \
+                 -d alert_comparator="greater than" \
+                 -d alert_threshold="0" \
+                 -d actions="webhook" \
+                 -d is_visible=1
+          done
